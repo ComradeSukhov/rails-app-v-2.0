@@ -4,6 +4,7 @@ services:
         build:
           context: ./rails_app
         #   target: development
+        working_dir: /usr/src/rails_app/
         command: rails s -b 0.0.0.0
         volumes:
             - .:/usr/src
@@ -15,12 +16,13 @@ services:
             - redis
         environment:
             REDIS_URL: redis://redis:6379/0
-            
+
     cost_server:
-        build: 
+        build:
           context: ./05_homework_ruby-server_v2.0
         ports:
         - "3001:3001"
+
     db:
         image: postgres:11.5
         environment:
@@ -28,9 +30,10 @@ services:
             POSTGRES_PASSWORD: password
         volumes:
             - postgres:/var/lib/postgresql/data
+
     sidekiq:
         build: ./rails_app
-        command: sidekiq
+        command: sidekiq -r /usr/src/rails_app/app/workers/vm_control_worker.rb
         volumes:
             - .:/usr/src
         depends_on:
@@ -41,19 +44,19 @@ services:
             REDIS_URL: redis://redis:6379/0
         tmpfs:
             - /usr/src/tmp/pids
-        
+
     rabbitmq:
         image: rabbitmq:3-management-alpine
         ports:
             - "15672:15672"
         volumes:
             - rabbit:/var/lib/rabbitmq
-    
+
     redis:
         image: redis:5-alpine
         volumes:
             - redis:/data
-            
+
 volumes:
     postgres:
     redis:
